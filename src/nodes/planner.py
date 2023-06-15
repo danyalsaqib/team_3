@@ -30,7 +30,7 @@ class Planner:
         self.right_push = False
 
         self.time_step = 1/30
-        self.k_att     = numpy.array([[1, 0, 0], [0, 1, 0], [0, 0, 0.25]])
+        self.k_att     = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 0.25]])
         self.k_rep     = 1
         self.vel_max   = 0.5
         # TODO BEGIN MRSS: Add attributes (If needed)
@@ -38,11 +38,21 @@ class Planner:
         # END MRSS
 
     def map_callback(self, msg):
+        rospy.logerr("Entering Callback")
         self.map = json.loads(msg.data)
-
+        obstacle_dict = [key for key in self.map.keys() if 'obstacle' in key.lower()]
         # TODO BEGIN MRSS: Use map for planning
         goals = np.array(self.map["/goal"])
-        obstacle_1 = np.array(self.map["/obstacle1"])
+        #rospy.logerr("Obstacle Dictionary: ", str(obstacle_dict))
+        if "/obstacle0" in obstacle_dict:
+            rospy.logerr("obstacle 0 detected")
+        if "/obstacle1" in obstacle_dict:
+            rospy.logerr("obstacle 1 detected")
+            obstacle_1 = np.array(self.map["/obstacle1"])
+        if "/obstacle2" in obstacle_dict:
+            rospy.logerr("obstacle 2 detected")
+        if "/obstacle3" in obstacle_dict:
+            rospy.logerr("obstacle 3 detected")
         norm = np.linalg.norm(goals)
         #goal_vel = goals / norm
         #goal_vel = goal_vel * 0.15
@@ -53,25 +63,34 @@ class Planner:
 
         # Twist
         self.cmd = geometry_msgs.msg.Twist()
-
-        if np.abs(angle) > 0.1 and self.initial_turn == False:
+        self.cmd.linear.x = 0.
+        self.cmd.linear.y = 0.
+        self.cmd.angular.z = 0.
+        
+        if np.abs(angle) > 0.1 and self.initial_turn == False and norm > 0.5:
+            rospy.logerr("Initial Turn")
             self.cmd.linear.x = 0.
             self.cmd.linear.y = 0.
-            self.cmd.angular.z = (angle / norm) * 0.1
+            self.cmd.angular.z = (angle / norm) * 0.4
 
         else:
+            rospy.logerr("Initial Turn Complete, entering navigation")
             if self.initial_turn == False:
                 self.initial_turn = True
 
 
             planner = PotentialFieldPlanner([goals[0], goals[1], 0], self.time_step, self.k_att, self.k_rep, self.vel_max)
-
-            planner.set_obstacle_distance(1.0)
-            planner.set_obstacle_position([obstacle_1[0], obstacle_1[1], 0]) # Set to obtained position of the obstacles by robot
+            
+            if "/obstacle1" in obstacle_dict:
+                planner.set_obstacle_distance(1.0)
+                planner.set_obstacle_position([obstacle_1[0], obstacle_1[1], 0]) # Set to obtained position of the obstacles by robot
 
             #pos_des, lin_vel =  planner.get_avoidance_force (pos)
-            pos_des, lin_vel =  planner.get_avoidance_force ([0, 0, 0])
-            
+            if "/obstacle1" in obstacle_dict:
+                pos_des, lin_vel =  planner.get_avoidance_force([0, 0, 0])
+            else:
+                pos_des, lin_vel =  planner.get_desired_pos_vel([0, 0, 0])
+
             #hybrid_action, info = controller.update(lin_vel, ang_vel)
 
             #goals = np.array(self.map["/goal"])
@@ -82,7 +101,6 @@ class Planner:
             angle_modded = np.arctan2(pos_des[1], pos_des[0])
             #angle_modded = (angle_modded / norm) * 0.15
             angle_modded = angle_modded * 0.15
-
 
             # TODO BEGIN MRSS: Update the current command
             '''
@@ -131,8 +149,8 @@ class Planner:
                 self.cmd.linear.x = 0.
                 self.cmd.linear.y = 0.
                 self.cmd.angular.z = 0.
-
-
+    
+            
     def spin(self):
         '''
         Spins the node.
