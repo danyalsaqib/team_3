@@ -123,8 +123,9 @@ class Planner:
             #goal_vel = goal_vel * 0.15
 
             angle_modded = np.arctan2(pos_des[1], pos_des[0])
-            #angle_modded = (angle_modded / norm) * 0.15
-            angle_modded = angle_modded * 0.15
+            norm_pos_des = np.linalg.norm(pos_des)
+            #angle_modded = angle_modded * 0.15
+            angle_modded = (angle_modded / norm) * 0.2
 
             # TODO BEGIN MRSS: Update the current command
             '''
