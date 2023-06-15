@@ -50,6 +50,9 @@ class Planner:
         
         angle = np.arctan2(goals[1], goals[0])
 
+        # Twist
+        self.cmd = geometry_msgs.msg.Twist()
+
         if np.abs(angle) > 0.1 and self.initial_turn == False:
             self.cmd.linear.x = 0.
             self.cmd.linear.y = 0.
@@ -59,8 +62,6 @@ class Planner:
             if self.initial_turn == False:
                 self.initial_turn = True
 
-            # Twist
-            self.cmd = geometry_msgs.msg.Twist()
 
             planner = PotentialFieldPlanner([goals[0], goals[1], 0], self.time_step, self.k_att, self.k_rep, self.vel_max)
 
@@ -77,9 +78,9 @@ class Planner:
             #goal_vel = goals / norm
             #goal_vel = goal_vel * 0.15
 
-            #angle_modded = np.arctan2(goals[1], goals[0])
+            angle_modded = np.arctan2(pos_des[1], pos_des[0])
             #angle_modded = (angle / norm) * 0.15
-            angle_modded = angle * 0.15
+            angle_modded = angle_modded * 0.15
 
 
 
