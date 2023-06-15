@@ -94,7 +94,7 @@ class Planner:
                 planner.set_obstacle_distance(1.0)
                 planner.set_obstacle_position([obstacle_1[0], obstacle_1[1], 0]) # Set to obtained position of the obstacles by robot
             '''
-            planner.set_obstacle_distance(1.0)
+            planner.set_obstacle_distance(0.7)
 
             if obs_bool == True:
                 for obstacle_ind in obstacle_dict:
