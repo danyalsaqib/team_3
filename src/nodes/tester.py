@@ -84,6 +84,7 @@ while True:
 
 
     planner = PotentialFieldPlanner([goals[0], goals[1], 0], time_step, k_att, k_rep, vel_max)
+    
     """
     if "/obstacle1" in obstacle_dict:
         planner.set_obstacle_distance(1.0)
@@ -95,6 +96,7 @@ while True:
     else:
         pos_des, lin_vel =  planner.get_desired_pos_vel([0, 0, 0])
     """
+
     if obs_bool == True:
         for obstacle_ind in obstacle_dict:
             obstacle_arr = np.array(map[obstacle_ind])
