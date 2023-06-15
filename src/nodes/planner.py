@@ -44,6 +44,7 @@ class Planner:
         # TODO BEGIN MRSS: Use map for planning
         goals = np.array(self.map["/goal"])
         #rospy.logerr("Obstacle Dictionary: ", str(obstacle_dict))
+        '''
         if "/obstacle0" in obstacle_dict:
             rospy.logerr("obstacle 0 detected")
         if "/obstacle1" in obstacle_dict:
@@ -53,6 +54,13 @@ class Planner:
             rospy.logerr("obstacle 2 detected")
         if "/obstacle3" in obstacle_dict:
             rospy.logerr("obstacle 3 detected")
+        '''
+
+        if not obstacle_dict:
+            obs_bool = False:
+        else:
+            obs_bool = True
+
         norm = np.linalg.norm(goals)
         #goal_vel = goals / norm
         #goal_vel = goal_vel * 0.15
@@ -81,14 +89,24 @@ class Planner:
 
             planner = PotentialFieldPlanner([goals[0], goals[1], 0], self.time_step, self.k_att, self.k_rep, self.vel_max)
             
+            '''
             if "/obstacle1" in obstacle_dict:
                 planner.set_obstacle_distance(1.0)
                 planner.set_obstacle_position([obstacle_1[0], obstacle_1[1], 0]) # Set to obtained position of the obstacles by robot
+            '''
+            planner.set_obstacle_distance(1.0)
+
+            if obs_bool == True:
+                for obstacle_ind in obstacle_dict:
+                    obstacle_arr = np.array(self.map[obstacle_ind])
+                    planner.set_obstacle_position([obstacle_arr[0], obstacle_arr[1], 0]) # Set to obtained position of the obstacles by robot
 
             #pos_des, lin_vel =  planner.get_avoidance_force (pos)
             if "/obstacle1" in obstacle_dict:
+                rospy.logerr("Getting Avoidance Force")
                 pos_des, lin_vel =  planner.get_avoidance_force([0, 0, 0])
             else:
+                rospy.logerr("Getting Goal Force")
                 pos_des, lin_vel =  planner.get_desired_pos_vel([0, 0, 0])
 
             #hybrid_action, info = controller.update(lin_vel, ang_vel)
@@ -109,6 +127,9 @@ class Planner:
                 self.cmd.linear.y = 0.
                 self.cmd.angular.z = (angle / norm) * 0.1
             '''
+
+            rospy.logerr("Linear Velocity: ", lin_vel)
+            rospy.logerr("Angular Velocity: ", angle_modded)
 
             if norm > 0.1:
                 # Check if velocity has approached zero (local minima problem)
@@ -131,7 +152,7 @@ class Planner:
                     self.cmd.linear.y = lin_vel[1]
                     self.cmd.angular.z = angle_modded
                 '''
-                
+                rospy.logerr("Norm greater than 0.1 - Moving")
                 self.cmd.linear.x = lin_vel[0]
                 self.cmd.linear.y = lin_vel[1]
                 self.cmd.angular.z = angle_modded
@@ -145,6 +166,8 @@ class Planner:
                 
                 else:
                 '''
+
+                rospy.logerr("Norm less than 0.1 - Moving")
 
                 self.cmd.linear.x = 0.
                 self.cmd.linear.y = 0.

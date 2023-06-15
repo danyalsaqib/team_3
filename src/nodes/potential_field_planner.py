@@ -22,6 +22,9 @@ class PotentialFieldPlanner():
 
     def set_obstacle_position ( self, in_pos_obs ):
         self.pos_obs = numpy.array(in_pos_obs)
+
+    def set_obstacle_position_modded ( self, in_pos_obs ):
+        self.pos_obs = numpy.array(in_pos_obs)
                 
                 
     def get_desired_pos_vel (self, pos_fbk):
@@ -48,6 +51,24 @@ class PotentialFieldPlanner():
         vel_rep = self.get_repulsive_force ( pos_fbk ) 
         vel_des = vel_att + vel_rep 
         	   
+        # normalize it if the norm is too large
+        d = numpy.linalg.norm(vel_des) 
+        if d > self.vel_max:
+            vel_des = vel_des / d * self.vel_max
+        
+        pos_des = pos_fbk + vel_des * self.dt 
+        
+       #print(" vel_att=", vel_att, ",vel_rep", vel_rep)
+        
+        return pos_des, vel_des
+
+    def get_avoidance_force_modded ( self, pos_fbk ):
+        pos_fbk = numpy.array(pos_fbk)
+
+        vel_att = self.get_attractive_force ( pos_fbk ) 
+        vel_rep = self.get_repulsive_force ( pos_fbk ) 
+        vel_des = vel_att + vel_rep 
+               
         # normalize it if the norm is too large
         d = numpy.linalg.norm(vel_des) 
         if d > self.vel_max:
