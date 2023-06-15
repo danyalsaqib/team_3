@@ -50,6 +50,7 @@ class Planner:
         
         angle = np.arctan2(goals[1], goals[0])
 
+
         # Twist
         self.cmd = geometry_msgs.msg.Twist()
 
@@ -79,9 +80,8 @@ class Planner:
             #goal_vel = goal_vel * 0.15
 
             angle_modded = np.arctan2(pos_des[1], pos_des[0])
-            #angle_modded = (angle / norm) * 0.15
+            #angle_modded = (angle_modded / norm) * 0.15
             angle_modded = angle_modded * 0.15
-
 
 
             # TODO BEGIN MRSS: Update the current command
@@ -119,9 +119,19 @@ class Planner:
                 self.cmd.angular.z = angle_modded
                 
             else:
+                '''
+                if np.abs(angle) > 0.1 and self.initial_turn == False:
+                    self.cmd.linear.x = 0.
+                    self.cmd.linear.y = 0.
+                    self.cmd.angular.z = (angle / norm) * 0.1
+                
+                else:
+                '''
+
                 self.cmd.linear.x = 0.
                 self.cmd.linear.y = 0.
                 self.cmd.angular.z = 0.
+
 
     def spin(self):
         '''
