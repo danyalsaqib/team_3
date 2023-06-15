@@ -13,6 +13,7 @@ class PotentialFieldPlanner():
         self.k_rep   = k_rep
         self.vel_max = vel_max
         self.dist_min = 1
+        self.pos_obs_arr = []
 		        
     def set_target_pos (self, end_pos):
         self.end_pos = end_pos
@@ -24,7 +25,7 @@ class PotentialFieldPlanner():
         self.pos_obs = numpy.array(in_pos_obs)
 
     def set_obstacle_position_modded ( self, in_pos_obs ):
-        self.pos_obs = numpy.array(in_pos_obs)
+        self.pos_obs_arr.append(numpy.array(in_pos_obs))
                 
                 
     def get_desired_pos_vel (self, pos_fbk):
@@ -64,9 +65,9 @@ class PotentialFieldPlanner():
 
     def get_avoidance_force_modded ( self, pos_fbk ):
         pos_fbk = numpy.array(pos_fbk)
-
+        #print("obstacle dictionary within potetial: ", self.pos_obs_arr)
         vel_att = self.get_attractive_force ( pos_fbk ) 
-        vel_rep = self.get_repulsive_force ( pos_fbk ) 
+        vel_rep = self.get_repulsive_force_modded ( pos_fbk ) 
         vel_des = vel_att + vel_rep 
                
         # normalize it if the norm is too large
@@ -98,3 +99,27 @@ class PotentialFieldPlanner():
                 vel_des = vel_des / d * self.vel_max
 
             return vel_des
+
+    def get_repulsive_force_modded ( self, pos_fbk ):
+
+        vel_overall = numpy.array ([0,0,0])
+        
+        for obstacle_individual in self.pos_obs_arr:
+            print("self.pos_obs=", obstacle_individual, "pos_fbk=", pos_fbk )
+            d = numpy.linalg.norm( obstacle_individual[:2] - pos_fbk[:2] )
+            
+            if d > self.dist_min: # Far enough away, ignore the obstacle
+                vel_des = numpy.array ([0,0,0])
+            else:
+                dd_dq   = 2 * ( obstacle_individual - pos_fbk )           
+                vel_des = -self.k_rep / (d*d) * (1/d - 1/self.dist_min) * dd_dq            
+                vel_des[2] = 0.0     
+                
+                # normalize it if the norm is too large
+                d = numpy.linalg.norm(vel_des) 
+                if d > self.vel_max:
+                    vel_des = vel_des / d * self.vel_max
+
+            vel_overall = vel_overall + vel_des
+
+        return vel_overall

@@ -33,12 +33,15 @@ vel_max   = 0.5
 while True:
     print("Entering Callback")
     #map = json.loads(msg.data)
-    map = {"/goal" : [1, 2, 0], "/obstacle1" : [0.5, 0.5, 0]}
+    #map = {"/goal" : [1, 2, 0]}
+    map = {"/goal" : [1, 2, 0], "/obstacle1" : [0.5, 0.5, 0], "/obstacle2" : [0.5, 4, 0]}
     #obstacle_dict = [key for key in map.keys() if 'obstacle' in key.lower()]
-    obstacle_dict = ["key for key in map.keys() if 'obstacle' in key.lower()"]
+    obstacle_dict = [key for key in map.keys() if 'obstacle' in key.lower()]
     # TODO BEGIN MRSS: Use map for planning
     goals = np.array(map["/goal"])
     #print("Obstacle Dictionary: ", str(obstacle_dict))
+    
+    '''
     if "/obstacle0" in obstacle_dict:
         print("obstacle 0 detected")
     if "/obstacle1" in obstacle_dict:
@@ -48,10 +51,19 @@ while True:
         print("obstacle 2 detected")
     if "/obstacle3" in obstacle_dict:
         print("obstacle 3 detected")
+    '''
+
     norm = np.linalg.norm(goals)
     #goal_vel = goals / norm
     #goal_vel = goal_vel * 0.15
     # END MRSS
+
+    print("obs_dict: ", obstacle_dict)
+
+    if not obstacle_dict:
+        obs_bool = False
+    else:
+        obs_bool = True
 
     angle = np.arctan2(goals[1], goals[0])
 
@@ -72,17 +84,26 @@ while True:
 
 
     planner = PotentialFieldPlanner([goals[0], goals[1], 0], time_step, k_att, k_rep, vel_max)
-
+    """
     if "/obstacle1" in obstacle_dict:
         planner.set_obstacle_distance(1.0)
-        planner.set_obstacle_position([obstacle_1[0], obstacle_1[1], 0]) # Set to obtained position of the obstacles by robot
+        planner.set_obstacle_position_modded([obstacle_1[0], obstacle_1[1], 0]) # Set to obtained position of the obstacles by robot
 
     #pos_des, lin_vel =  planner.get_avoidance_force (pos)
     if "/obstacle1" in obstacle_dict:
-        pos_des, lin_vel =  planner.get_avoidance_force([0, 0, 0])
+        pos_des, lin_vel =  planner.get_avoidance_force_modded([0, 0, 0])
     else:
         pos_des, lin_vel =  planner.get_desired_pos_vel([0, 0, 0])
-
+    """
+    if obs_bool == True:
+        for obstacle_ind in obstacle_dict:
+            obstacle_arr = np.array(map[obstacle_ind])
+            planner.set_obstacle_position_modded([obstacle_arr[0], obstacle_arr[1], 0]) # Set to obtained position of the obstacles by robot
+        print("Getting Avoidance Force")
+        pos_des, lin_vel =  planner.get_avoidance_force_modded([0, 0, 0])
+    else:
+        print("Getting Goal Force")
+        pos_des, lin_vel =  planner.get_desired_pos_vel([0, 0, 0])
     #hybrid_action, info = controller.update(lin_vel, ang_vel)
 
     #goals = np.array(map["/goal"])
@@ -94,6 +115,8 @@ while True:
     #angle_modded = (angle_modded / norm) * 0.15
     angle_modded = angle_modded * 0.15
 
+    print("lin_vel", lin_vel)
+    print("angle_modded: ", angle_modded)
     # TODO BEGIN MRSS: Update the current command
     '''
     if np.abs(angle) > 0.1:

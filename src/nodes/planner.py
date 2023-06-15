@@ -57,7 +57,7 @@ class Planner:
         '''
 
         if not obstacle_dict:
-            obs_bool = False:
+            obs_bool = False
         else:
             obs_bool = True
 
@@ -100,15 +100,21 @@ class Planner:
                 for obstacle_ind in obstacle_dict:
                     obstacle_arr = np.array(self.map[obstacle_ind])
                     planner.set_obstacle_position([obstacle_arr[0], obstacle_arr[1], 0]) # Set to obtained position of the obstacles by robot
-
+                rospy.logerr("Getting Avoidance Force")
+                pos_des, lin_vel =  planner.get_avoidance_force_modded([0, 0, 0])
+            else:
+                rospy.logerr("Getting Goal Force")
+                pos_des, lin_vel =  planner.get_desired_pos_vel([0, 0, 0])
             #pos_des, lin_vel =  planner.get_avoidance_force (pos)
+            
+            '''
             if "/obstacle1" in obstacle_dict:
                 rospy.logerr("Getting Avoidance Force")
                 pos_des, lin_vel =  planner.get_avoidance_force([0, 0, 0])
             else:
                 rospy.logerr("Getting Goal Force")
                 pos_des, lin_vel =  planner.get_desired_pos_vel([0, 0, 0])
-
+            '''
             #hybrid_action, info = controller.update(lin_vel, ang_vel)
 
             #goals = np.array(self.map["/goal"])
