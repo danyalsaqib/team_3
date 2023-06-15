@@ -93,7 +93,7 @@ class Planner:
             '''
 
             if norm > 0.1:
-                # Check if velocity has approached zero (minima problem)
+                # Check if velocity has approached zero (local minima problem)
                 
                 '''
                 if np.linalg.norm(lin_vel) < 0.05:
