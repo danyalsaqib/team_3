@@ -61,15 +61,19 @@ class Planner:
         # Twist
         self.cmd = geometry_msgs.msg.Twist()
         
-        if np.abs(angle) > 0.1: # and self.initial_turn == False: # and norm > 0.5:
-            rospy.logerr("Initial Turn")
-            self.cmd.linear.x = 0.
-            self.cmd.linear.y = 0.
-            self.cmd.angular.z = (angle / norm) * 0.1
+        if np.abs(angle) > 0.2 and self.initial_turn == False: # and norm > 0.5:
+            if norm > 0.5:
+                rospy.logerr("Initial Turn")
+                self.cmd.linear.x = 0.
+                self.cmd.linear.y = 0.
+                z_command = (angle / norm) * 0.1
+                self.cmd.angular.z = (angle / norm) * 0.1
+                if z_command < 0.1:
+                    self.initial_turn = True       
 
         elif norm > 0.1:
-            rospy.logerr("Initial Turn Complete, entering navigation")
-            #self.initial_turn = True
+            #rospy.logerr("Initial Turn Complete, entering navigation")
+            self.initial_turn = True
 
             planner = PotentialFieldPlanner([goals[0], goals[1], 0], self.time_step, self.k_att, self.k_rep, self.vel_max)
             
@@ -85,30 +89,30 @@ class Planner:
                 rospy.logerr("Getting Goal Force")
                 pos_des, lin_vel =  planner.get_desired_pos_vel([0, 0, 0])        
 
-            rospy.logerr("Linear Velocity: ")
-            rospy.logerr(lin_vel)
+            #rospy.logerr("Linear Velocity: ")
+            #rospy.logerr(lin_vel)
             norm_lin_vel = np.linalg.norm(lin_vel[:2])
             lin_vel = (lin_vel / norm_lin_vel) * 0.15
-            rospy.logerr("Linear Velocity for moving (modded): ")
-            rospy.logerr(lin_vel)
+            #rospy.logerr("Linear Velocity for moving (modded): ")
+            #rospy.logerr(lin_vel)
             
             angle_modded = np.arctan2(pos_des[1], pos_des[0])
-            rospy.logerr("Angular Velocity: ")
-            rospy.logerr(angle_modded)
+            #rospy.logerr("Angular Velocity: ")
+            #rospy.logerr(angle_modded)
             norm_angle_modded = np.linalg.norm(pos_des[:2])
             angle_modded = (angle_modded / norm_angle_modded) * 0.1
-            rospy.logerr("Angular Velocity for turning (modded): ")
-            rospy.logerr(angle_modded)
+            #rospy.logerr("Angular Velocity for turning (modded): ")
+            #rospy.logerr(angle_modded)
             
             # TODO BEGIN MRSS: Update the current command
 
-            rospy.logerr("Norm greater than 0.1 - Moving")
+            #rospy.logerr("Norm greater than 0.1 - Moving")
             self.cmd.linear.x = lin_vel[0]
             self.cmd.linear.y = lin_vel[1]
             self.cmd.angular.z = angle_modded
             
         else:
-            #self.initial_turn = True
+            self.initial_turn = True
 
             rospy.logerr("NOT MOVING")
             self.cmd.linear.x = 0.
