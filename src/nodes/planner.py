@@ -62,8 +62,9 @@ class Planner:
         self.cmd = geometry_msgs.msg.Twist()
         
         if np.abs(angle) > 0.2 and self.initial_turn == False: # and norm > 0.5:
+            rospy.logerr("Initial Turn - Outer")
             if norm > 0.5:
-                rospy.logerr("Initial Turn")
+                rospy.logerr("Initial Turn - Inner")
                 self.cmd.linear.x = 0.
                 self.cmd.linear.y = 0.
                 z_command = (angle / norm) * 0.1
