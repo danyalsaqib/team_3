@@ -51,8 +51,8 @@ class Planner:
             obs_bool = True
 
         norm = np.linalg.norm(goals)
-        goal_vel = goals / norm
-        goal_vel = goal_vel * 0.15
+        #goals = goals / norm
+        #goals = goals * 0.15
         # END MRSS
         
         angle = np.arctan2(goals[1], goals[0])
@@ -61,23 +61,21 @@ class Planner:
         # Twist
         self.cmd = geometry_msgs.msg.Twist()
         
-        if np.abs(angle) > 0.1 and self.initial_turn == False and norm > 0.5:
+        if np.abs(angle) > 0.1: # and self.initial_turn == False: # and norm > 0.5:
             rospy.logerr("Initial Turn")
             self.cmd.linear.x = 0.
             self.cmd.linear.y = 0.
             self.cmd.angular.z = (angle / norm) * 0.4
 
-        else:
+        elif norm > 0.1:
             rospy.logerr("Initial Turn Complete, entering navigation")
-            if self.initial_turn == False:
-                self.initial_turn = True
-
+            #self.initial_turn = True
 
             planner = PotentialFieldPlanner([goals[0], goals[1], 0], self.time_step, self.k_att, self.k_rep, self.vel_max)
             
             planner.set_obstacle_distance(0.7)
 
-            if obs_bool == True:
+            if obs_bool:
                 for obstacle_ind in obstacle_dict:
                     obstacle_arr = np.array(self.map[obstacle_ind])
                     planner.set_obstacle_position_modded([obstacle_arr[0], obstacle_arr[1], 0]) # Set to obtained position of the obstacles by robot
@@ -87,51 +85,29 @@ class Planner:
                 rospy.logerr("Getting Goal Force")
                 pos_des, lin_vel =  planner.get_desired_pos_vel([0, 0, 0])        
 
-            angle_modded = np.arctan2(pos_des[1], pos_des[0])
-            norm_pos_des = np.linalg.norm(pos_des)
-            #angle_modded = angle_modded * 0.15
-            angle_modded = (angle_modded / norm_pos_des) * 0.2
-
-            # TODO BEGIN MRSS: Update the current command
-
             rospy.logerr("Linear Velocity: ")
             rospy.logerr(lin_vel)
+            angle_modded = np.arctan2(pos_des[1], pos_des[0])
             rospy.logerr("Angular Velocity: ")
             rospy.logerr(angle_modded)
+            angle_modded = angle_modded * 0.1
+            rospy.logerr("Angular Velocity for turning: ")
+            rospy.logerr(angle_modded)
+            
+            # TODO BEGIN MRSS: Update the current command
 
-            if norm > 0.1:
-                # Check if velocity has approached zero (local minima problem)
-                
-                '''
-                if np.linalg.norm(lin_vel) < 0.05:
-                    if self.right_push == False:
-                        self.cmd.linear.x = 0
-                        self.cmd.linear.y = -0.1
-                        self.cmd.angular.z = 0
-                        self.right_push = True
-                    else:
-                        self.cmd.linear.x = 0
-                        self.cmd.linear.y = -0.1
-                        self.cmd.angular.z = 0
-                        self.right_push = False
-                else:
-                
-                    self.cmd.linear.x = lin_vel[0]
-                    self.cmd.linear.y = lin_vel[1]
-                    self.cmd.angular.z = angle_modded
-                '''
-                rospy.logerr("Norm greater than 0.1 - Moving")
-                self.cmd.linear.x = lin_vel[0]
-                self.cmd.linear.y = lin_vel[1]
-                self.cmd.angular.z = angle_modded
-                
-            else:
+            rospy.logerr("Norm greater than 0.1 - Moving")
+            self.cmd.linear.x = lin_vel[0]
+            self.cmd.linear.y = lin_vel[1]
+            self.cmd.angular.z = angle_modded
+            
+        else:
+            #self.initial_turn = True
 
-                rospy.logerr("NOT MOVING")
-
-                self.cmd.linear.x = 0.
-                self.cmd.linear.y = 0.
-                self.cmd.angular.z = 0.
+            rospy.logerr("NOT MOVING")
+            self.cmd.linear.x = 0.
+            self.cmd.linear.y = 0.
+            self.cmd.angular.z = 0.
     
             
     def spin(self):
