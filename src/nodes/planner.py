@@ -65,7 +65,7 @@ class Planner:
             rospy.logerr("Initial Turn")
             self.cmd.linear.x = 0.
             self.cmd.linear.y = 0.
-            self.cmd.angular.z = (angle / norm) * 0.4
+            self.cmd.angular.z = (angle / norm) * 0.1
 
         elif norm > 0.1:
             rospy.logerr("Initial Turn Complete, entering navigation")
@@ -87,11 +87,17 @@ class Planner:
 
             rospy.logerr("Linear Velocity: ")
             rospy.logerr(lin_vel)
+            norm_lin_vel = np.linalg.norm(lin_vel[:2])
+            lin_vel = (lin_vel / norm_lin_vel) * 0.15
+            rospy.logerr("Linear Velocity for moving (modded): ")
+            rospy.logerr(lin_vel)
+            
             angle_modded = np.arctan2(pos_des[1], pos_des[0])
             rospy.logerr("Angular Velocity: ")
             rospy.logerr(angle_modded)
-            angle_modded = angle_modded * 0.1
-            rospy.logerr("Angular Velocity for turning: ")
+            norm_angle_modded = np.linalg.norm(pos_des[:2])
+            angle_modded = (angle_modded / norm_angle_modded) * 0.1
+            rospy.logerr("Angular Velocity for turning (modded): ")
             rospy.logerr(angle_modded)
             
             # TODO BEGIN MRSS: Update the current command
